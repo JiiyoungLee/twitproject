@@ -4,12 +4,10 @@
 </head>
 <body>
 	<h1>Index Page</h1>
-	<script>
-	 	console.log('{{ form_id }}');
-	 </script>
 	<form method="POST" {% if form_id%} action="{% url 'minitwitter:modify' form_id %}"
-						{% else %} action="{% url 'minitwitter:index'%}"  {% endif %}>
+						{% else %} action="{% url 'minitwitter:write'%}"  {% endif %}>
 		{% csrf_token %}
+		{% if not form_id%} <p><label for="id_author">Author:</label><input type="text" id="id_author" name="author" required value="{{ username }}"></p> {% endif %}
 		{{ form.as_p }}
 		<input type="submit" value="SUBMIT">
 	</form>
