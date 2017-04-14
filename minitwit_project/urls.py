@@ -19,5 +19,5 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-	url(r'^test/', include('minitwitter.urls', namespace="minitwitter")),   
+	url(r'^minitwitter/', include('minitwitter.urls', namespace="minitwitter")),   
 ]

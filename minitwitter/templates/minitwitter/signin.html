@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+	<h1>SIGNIN Page</h1>
+	<form method="POST" action="{%url 'minitwitter:signin' %}" enctype="multipart/form-data">
+	{% csrf_token %}
+		{% for field1 in form1 %}
+		<p id="p{{ forloop.counter }}">
+			{{ field1.label_tag}}{{ field1 }}
+			{% if field1.help_text %}
+			{{ field1.help_text}}
+			{% endif %}
+			<script>console.log('{{field1.name}}'); </script>
+			{% if field1.name == 'password'%}
+				<span id="span_pw_check"></span>
+			{% endif %}
+		</p>
+		{% endfor %}
+		{% for field2 in form2 %}
+		<p>
+			{{ field2.label_tag}}{{ field2 }}
+			{% if field2.help_text %}
+			{{ field2.help_text}}
+			{% endif %}
+			<script>console.log('{{field2.name}}'); </script>
+		</p>
+		{% endfor %}
+		<input type="submit" value="SIGNIN">		
+	</form>
+	<script>
+		window.onpageshow = function() {
+			var fieldCheckPassword = document.getElementById('span_pw_check');
+			fieldCheckPassword.innerHTML = "";
+			fieldCheckPassword.style.color='red';
+		}
+		var inputPassword = document.getElementsByName("form1_prefix-password")[0];
+		var inputPasswordCheck = document.getElementsByName("form1_prefix-password_check")[0];
+		console.log(inputPassword)
+		console.log(inputPasswordCheck)
+		inputPasswordCheck.addEventListener('keyup', function() {
+			var fieldCheckPassword = document.getElementById('span_pw_check');
+			if (inputPasswordCheck.value !== inputPassword.value) {
+				fieldCheckPassword.innerHTML = 'Password does not match.';
+				fieldCheckPassword.style.color='red';
+			}
+			else {
+				fieldCheckPassword.innerHTML = 'Password does match.';
+				fieldCheckPassword.style.color='green';
+			}
+		});
+	</script>
+</body>
+</html>

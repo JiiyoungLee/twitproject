@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+	<h1>Article Page</h1>
+	<form method="POST" {% if article_id %} action="." {% else %} action="{%url 'minitwitter:write_article' %}" {% endif%} enctype="multipart/form-data">
+	{% csrf_token %}
+		{{ form1.as_p }}
+		{{ form2.as_p }}
+	<input type="submit" value="write">
+	</form>
+</body>
+</html>

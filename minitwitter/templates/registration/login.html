@@ -15,5 +15,8 @@
 	<p><label for="id_password">PW  </label>{{ form.password }}</p>
 	<input type="submit" value="LOG IN">
 	</form>
+	<form method="GET" action="{%url 'minitwitter:signin'%}">
+		<input type="submit" value="SIGN IN">
+	</form>
 </body>
 </html>

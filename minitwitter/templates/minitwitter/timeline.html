@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+	<h1>TIMELINE Page</h1>
+	ID: {{ this_member.user.username }}
+	Nickname: {{ this_member.nickname }}
+	<img src="/minitwitter/uploads/{{ this_member.profile}}" width="35px" height="35px">
+	<form method="GET" {% if flag %} action="{%url 'minitwitter:timeline'%}" {% else %} action="{%url 'minitwitter:my_timeline'%}" {% endif %}>
+	{% if flag %} <input type="submit" value="timeline"> {% else %} <input type="submit" value="my timeline"> {% endif %}
+		
+	</form>
+	<form method="GET" action="{%url 'minitwitter:write_article'%}">
+		<input type="submit" value="write">
+	</form>
+	<form method="GET" action="{%url 'minitwitter:logout'%}">
+		<input type="submit" value="logout">
+	</form>
+	{% if articles %}
+		{% for article in articles %}
+			<p>
+			{{ article.author.nickname }} {{ article.modified_time|date:"Y/m/d H:i"}}<br>
+			{{ article.context }}<br>
+			{% for photo in photos %}
+				{% if photo.article == article%}
+				<img src="/minitwitter/uploads/{{ photo.photo}}" width="150px" height="100px">
+				{% endif %}
+			{% endfor %}		
+			<form method="GET" action="{% url 'minitwitter:modify_article' article.id %}"><input type="submit" value="modify"></form>
+			</p>
+		{% endfor %}
+	{% else %}
+	<h3>NO ARTICLES.</h3>
+	{% endif %}
+</body>
+</html>
