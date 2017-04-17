@@ -42,6 +42,16 @@ class SigninMemberForm(forms.Form):
 	gender = forms.ChoiceField(label='Gender', choices=GENDER_CHOICES, widget=forms.Select)
 	profile = forms.ImageField(label='Profile')
 
+class ModifyMemberForm(forms.Form):
+	GENDER_CHOICES = (
+		('F', 'Female'),
+		('M', 'Male'),
+	)
+	nickname = forms.CharField(label='Nickname', max_length=20)
+	birthday = forms.DateField(label='Birthday')
+	gender = forms.ChoiceField(label='Gender', choices=GENDER_CHOICES, widget=forms.Select)
+	profile = forms.ImageField(label='Profile', required=False)
+
 class SigninMemberModelForm(ModelForm):
 	class Meta:
 		model = Member
@@ -54,7 +64,7 @@ class ArticleForm(forms.Form):
 	context = forms.CharField(label='Context', max_length=1000, widget=forms.Textarea(attrs={'cols':80, 'rows':10, 'autofocus':True}))
 
 class PhotoForm(forms.Form):
-	photo = forms.ImageField(label='Photo', required=False)
+	photo = forms.ImageField(label='Photo', required=False, widget=forms.ClearableFileInput(attrs={'multiple': True}))
 
 class ArticleModelForm(ModelForm):
 	class Meta:

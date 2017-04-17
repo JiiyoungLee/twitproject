@@ -4,11 +4,41 @@
 </head>
 <body>
 	<h1>Article Page</h1>
-	<form method="POST" {% if article_id %} action="." {% else %} action="{%url 'minitwitter:write_article' %}" {% endif%} enctype="multipart/form-data">
+	<form method="POST" action="{{request.path}}" enctype="multipart/form-data">
 	{% csrf_token %}
 		{{ form1.as_p }}
-		{{ form2.as_p }}
+		{% if form2 %}
+			{{ form2.as_p }}
+		{% endif %}
+		{% if these_photos %}
+			{% for this_photo in these_photos %}
+				<img src="/minitwitter/uploads/{{ this_photo.photo }}" width="150px" height="100px" id="img{{ this_photo.id }}">
+				<input type="button" name="btn_delete_img" value="x" id="btn_delete_img{{ this_photo.id }}">
+				<br>
+			{% endfor %}
+		{% endif %}
+	<p>
 	<input type="submit" value="write">
+	</p>
 	</form>
+	<script>
+	var btnDeleteImage = document.getElementsByName("btn_delete_img");
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			alert("Success to Delete Image.");
+		}
+	};
+	for (let i = 0; i < btnDeleteImage.length; i++) {
+		btnDeleteImage[i].addEventListener('click', function() {
+			var btnId = btnDeleteImage[i].id.substr(14);
+			var deleteImage = document.getElementById("img"+btnId);
+			deleteImage.setAttribute("hidden", "");
+			btnDeleteImage[i].setAttribute("hidden", "");
+			xhttp.open("GET", "/minitwitter/delete/image/"+btnId, true);
+			xhttp.send();
+		});
+	}
+</script>
 </body>
 </html>

@@ -16,6 +16,9 @@
 			{% if field1.name == 'password'%}
 				<span id="span_pw_check"></span>
 			{% endif %}
+			{% if field1.name == 'user_name' %}
+				<input type="button" value="check" id="btn_check_username">
+			{% endif %}
 		</p>
 		{% endfor %}
 		{% for field2 in form2 %}
@@ -25,6 +28,9 @@
 			{{ field2.help_text}}
 			{% endif %}
 			<script>console.log('{{field2.name}}'); </script>
+			{% if field2.name == 'nickname' %}
+				<input type="button" value="check" id="btn_check_nickname">
+			{% endif %}
 		</p>
 		{% endfor %}
 		<input type="submit" value="SIGNIN">		
@@ -50,6 +56,38 @@
 				fieldCheckPassword.style.color='green';
 			}
 		});
+		
+			var btnCheckNickname = document.getElementById("btn_check_nickname");
+			console.log(btnCheckNickname)
+			var xhttp2 = new XMLHttpRequest();
+			xhttp2.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					alert(xhttp2.responseText);
+				}
+			};
+			btnCheckNickname.addEventListener('click', function() {	
+				var inputNickname = document.getElementsByName("form2_prefix-nickname");
+				console.log(inputNickname[0].value)
+				xhttp2.open("GET", "/minitwitter/auth/check/nickname/"+inputNickname[0].value, true);
+				xhttp2.send();
+			});
+
+		var btnCheckUsername = document.getElementById("btn_check_username");
+			console.log(btnCheckUsername)
+			var xhttp = new XMLHttpRequest();
+			xhttp.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					alert(xhttp.responseText);
+				}
+			};
+			btnCheckUsername.addEventListener('click', function() {	
+				var inputUserName = document.getElementsByName("form1_prefix-user_name");
+				console.log(inputUserName[0].value)
+				xhttp.open("GET", "/minitwitter/auth/check/username/"+inputUserName[0].value, true);
+				xhttp.send();
+			});
+		
+		
 	</script>
 </body>
 </html>

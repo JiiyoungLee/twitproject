@@ -2,9 +2,12 @@ from django.shortcuts import render, redirect
 from django.core.urlresolvers import reverse
 from .models import Post, Member, Article, Photo
 from django.contrib.auth.models import User
-from .forms import PostForm, BasePostForm, LoginUserForm, SigninUserForm, SigninUserModelForm, SigninMemberForm, SigninMemberModelForm,  PhotoForm, ArticleForm
+from .forms import PostForm, BasePostForm, LoginUserForm, SigninUserForm, SigninUserModelForm, SigninMemberForm, SigninMemberModelForm,  PhotoForm, ArticleForm, ModifyMemberForm
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import authenticate
+from django.conf import settings
+import os
+
 from django.contrib.auth.decorators import login_required
 
 # Create your views here.
@@ -86,6 +89,8 @@ def write_article(request):
 		return render(request, 'minitwitter/article.html', {'form1': form1, 'form2': form2})
 	if request.method == 'POST':
 		form1 = ArticleForm(request.POST, prefix='form1_prefix')
+		print(request.POST)
+		print(request.FILES)
 		if form1.is_valid():
 			print('form1')
 			print(form1)
@@ -94,13 +99,15 @@ def write_article(request):
 			input_article = Article(author=author, context=context)
 			input_article.save()
 			form2 = PhotoForm(request.POST, request.FILES, prefix='form2_prefix')
+			files = request.FILES.getlist('form2_prefix-photo')
 			print('form2')
 			print(form2)
+			print('files')
+			print(files)
 			if form2.is_valid():
-				photo=form2.cleaned_data['photo']
-				print(photo)
-				input_photo = Photo(article=input_article, photo=photo)
-				input_photo.save()
+				for file in files:
+					input_photo = Photo(article=input_article, photo=file)
+					input_photo.save()
 			else:
 				print(form2.errors)
 		else:
@@ -111,11 +118,20 @@ def modify_article(request, article_id):
 	if request.method == "GET":
 		this_article = Article.objects.get(id=article_id)
 		these_photos = Photo.objects.filter(article_id=article_id)
+		photos_list = []
 		form1 = ArticleForm({'context': this_article.context})
-		form2 = PhotoForm({'photo': these_photos})
-		return render(request, 'minitwitter/article.html', {'form1': form1, 'form2': form2})
+		print(these_photos)
+		if len(these_photos) == 0:
+			form2 = PhotoForm()
+		else:
+			for this_photo in these_photos:
+				form2 = PhotoForm()
+				photos_list.append({'id': this_photo.id, 'photo': this_photo.photo})
+		return render(request, 'minitwitter/article.html', {'form1': form1, 'form2': form2, 'these_photos': photos_list})
 	if request.method == "POST":
 		form1 = ArticleForm(request.POST)
+		print(request.POST)
+		print(request.FILES)
 		if form1.is_valid():
 			print('form1')
 			print(form1)
@@ -123,16 +139,55 @@ def modify_article(request, article_id):
 			context=form1.cleaned_data['context']
 			this_article.context = context
 			this_article.save()
-			form2 = PhotoForm(request.FILES)
+			form2 = PhotoForm(request.POST, request.FILES)
+			files = request.FILES.getlist('photo')
 			print('form2')
 			print(form2)
+			print('files')
+			print(files)
 			if form2.is_valid():
-				print('OK')
+				for file in files:
+					input_photo = Photo(article=this_article, photo=file)
+					input_photo.save()
+				else:
+					pass
 			else:
 				print(form2.errors)
 		else:
 			print(form1.errors)
 		return HttpResponseRedirect(reverse('minitwitter:timeline'))
+
+def modify_user(request):
+	if request.method == "GET":
+		this_member = Member.objects.get(user=request.user)
+		print(this_member.gender)
+		form = ModifyMemberForm(initial={'nickname': this_member.nickname, 'profile': this_member.profile , 'birthday': this_member.birthday, 'gender': this_member.gender})	
+		return render(request, 'minitwitter/modifyuserinfo.html', {'form': form})
+	if request.method == "POST":
+		form = ModifyMemberForm(request.POST, request.FILES)
+		print(request.FILES)
+		if form.is_valid():
+			print('form')
+			print(form)
+			this_member = Member.objects.get(user=request.user)
+			nickname=form.cleaned_data['nickname']
+			birthday=form.cleaned_data['birthday']
+			gender=form.cleaned_data['gender']
+			if request.FILES:
+				profile_path = this_member.profile
+				os.remove(os.path.join(settings.MEDIA_ROOT, str(profile_path)))
+				profile=form.cleaned_data['profile']
+			else:
+				profile=this_member.profile
+			this_member.nickname=nickname
+			this_member.birthday=birthday
+			this_member.gender=gender
+			this_member.profile=profile
+			this_member.save()
+		else:
+			print(form.errors)
+		
+	return HttpResponseRedirect(reverse('minitwitter:timeline'))
 
 def uploads(request, file):
 	if file[0:8] == 'profile/':
@@ -141,6 +196,36 @@ def uploads(request, file):
 	if file[0:6] == 'media/':
 		photos = Photo.objects.get(photo=file)
 		return HttpResponse(photos.photo)
+
+def delete_image(request, photo_id):
+	print('delete photo')
+	photo = Photo.objects.get(id=photo_id)
+	photo_path = photo.photo
+	photo.delete();
+	os.remove(os.path.join(settings.MEDIA_ROOT, str(photo_path)))
+	return HttpResponse("")
+
+def check_user_name(request, user_name):
+	try:
+		user = User.objects.get(username=user_name)
+	except User.DoesNotExist:
+		print("not duplicate")
+		return HttpResponse("You can use that User Name.")
+	else:
+		print("duplicate")
+		return HttpResponse("You can't use that User Name.")
+
+def check_nickname(request, nickname):
+	try:
+		member = Member.objects.get(nickname=nickname)
+	except Member.DoesNotExist:
+		print("not duplicate")
+		return HttpResponse("You can use that Nickname.")
+	else:
+		print("duplicate")
+		return HttpResponse("You can't use that Nickname.")
+
+
 #test code	
 @login_required(login_url='/test/auth/login/')
 def list(request):
