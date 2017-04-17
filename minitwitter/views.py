@@ -215,7 +215,7 @@ def check_user_name(request, user_name):
 		print("duplicate")
 		return HttpResponse("You can't use that User Name.")
 
-def check_nickname(request, nickname):
+def check_nicksname(request, nickname):
 	try:
 		member = Member.objects.get(nickname=nickname)
 	except Member.DoesNotExist:
