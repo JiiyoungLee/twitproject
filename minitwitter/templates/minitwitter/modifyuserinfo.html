@@ -11,14 +11,32 @@
 			{% if field.help_text %}
 			{{ field.help_text}}
 			{% endif %}
+			{% if field.name == 'nickname' %}
+				<input type="button" value="check" id="btn_check_nickname">
+			{% endif %}
 			<br>
-			<script>
-				console.log('{{field}}');
-			</script>
 		{% endfor %}
 
-	<input type="submit" value="modify">
+	<input type="submit" value="modify" name="btn_modify">
 	</form>
-	
+	<script>
+		var btnCheckNickname = document.getElementById("btn_check_nickname");
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				alert(xhttp.responseText);
+				document.getElementsByName("btn_modify")[0].removeAttribute('disabled',"");
+			}
+			if (this.readyState == 4 && this.status == 409) {
+				alert(xhttp.responseText);
+				document.getElementsByName("btn_modify")[0].setAttribute('disabled',"");
+			}
+		};
+		btnCheckNickname.addEventListener('click', function() {	
+			var inputNickname = document.getElementsByName("nickname");
+			xhttp.open("GET", "/minitwitter/auth/check/nickname/"+inputNickname[0].value, true);
+			xhttp.send();
+		});
+	</script>
 </body>
 </html>
