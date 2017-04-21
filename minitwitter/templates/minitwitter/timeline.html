@@ -20,16 +20,22 @@
 		<input type="submit" value="logout">
 	</form>
 	{% if articles %}
-		{% for article in articles %}
+		{% for item in articles %}
 			<p>
-			<span name="span_nickname" id="{{ article.id }}">{{ article.author.nickname }}</span> {{ article.modified_time|date:"Y/m/d H:i"}}<br>
-			{{ article.context }}<br>
-			{% for photo in photos %}
-				{% if photo.article == article%}
+			<span name="span_nickname" id="{{ item.article.id }}">{{ item.article.author.nickname }}</span> {{ item.article.modified_time|date:"Y/m/d H:i"}}<br>
+			{{ item.article.context }}<br>
+			{% if item.photos %}
+			{% for photo in item.photos %}
 				<img src="/minitwitter/uploads/{{ photo.photo}}" width="150px" height="100px">
-				{% endif %}
+			{% endfor %}
+			{% endif %}
+			<br>
+			{% if item.tags %}
+			{% for tag in item.tags %}
+				<a href="{% url 'minitwitter:search_article' tag.hashtag.hashtag%}">{{ tag.hashtag.hashtag }}</a>
 			{% endfor %}		
-			<form method="GET" action="{% url 'minitwitter:modify_article' article.id %}"><input type="submit" value="modify" name="btn_modify"></form>
+			{% endif %}
+			<form method="GET" action="{% url 'minitwitter:modify_article' item.article.id %}"><input type="submit" value="modify" name="btn_modify"></form>
 			</p>
 		{% endfor %}
 	{% else %}
@@ -41,6 +47,8 @@
 		for (let i = 0; i < btnModify.length; i++) {
 			if (article[i].innerHTML != '{{ this_member.nickname}}') {
 				btnModify[i].setAttribute('disabled',"");
+			} else {
+				btnModify[i].removeAttribute('disabled',"");
 			}	
 		};
 	</script>

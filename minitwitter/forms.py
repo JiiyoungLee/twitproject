@@ -1,17 +1,7 @@
 from django.forms import ModelForm, Form
 from django import forms
-from .models import Post, Member, Article, Photo
+from .models import Member, Article, Photo, Hashtag, Tagged
 from django.contrib.auth.models import User
-
-class PostForm(ModelForm):
-	class Meta:
-		model = Post
-		fields = ['author', 'title', 'context']
-
-class BasePostForm(ModelForm):
-	class Meta:
-		model = Post
-		fields = ['title', 'context']
 
 class LoginUserForm(ModelForm):
 	class Meta:
@@ -20,8 +10,10 @@ class LoginUserForm(ModelForm):
 
 class SigninUserForm(forms.Form):
 	user_name = forms.CharField(label='User name', max_length=150)
-	password = forms.CharField(label='Password', max_length=128, widget=forms.PasswordInput)
-	password_check = forms.CharField(label='Password Check', max_length=128, widget=forms.PasswordInput)
+	password = forms.CharField(label='Password', max_length=128, 
+							   widget=forms.PasswordInput)
+	password_check = forms.CharField(label='Password Check', 
+									 max_length=128, widget=forms.PasswordInput)
 	email = forms.CharField(label='Email', max_length=254, widget=forms.EmailInput)
 
 class SigninUserModelForm(ModelForm):
@@ -39,7 +31,8 @@ class SigninMemberForm(forms.Form):
 	)
 	nickname = forms.CharField(label='Nickname', max_length=20)
 	birthday = forms.DateField(label='Birthday')
-	gender = forms.ChoiceField(label='Gender', choices=GENDER_CHOICES, widget=forms.Select)
+	gender = forms.ChoiceField(label='Gender', choices=GENDER_CHOICES,
+							   widget=forms.Select)
 	profile = forms.ImageField(label='Profile')
 
 class ModifyMemberForm(forms.Form):
@@ -49,7 +42,8 @@ class ModifyMemberForm(forms.Form):
 	)
 	nickname = forms.CharField(label='Nickname', max_length=20)
 	birthday = forms.DateField(label='Birthday')
-	gender = forms.ChoiceField(label='Gender', choices=GENDER_CHOICES, widget=forms.Select)
+	gender = forms.ChoiceField(label='Gender', choices=GENDER_CHOICES, 
+							   widget=forms.Select)
 	profile = forms.ImageField(label='Profile', required=False)
 
 class SigninMemberModelForm(ModelForm):
@@ -61,19 +55,28 @@ class SigninMemberModelForm(ModelForm):
 		}
 
 class ArticleForm(forms.Form):
-	context = forms.CharField(label='Context', max_length=1000, widget=forms.Textarea(attrs={'cols':80, 'rows':10, 'autofocus':True}))
+	context = forms.CharField(label='Context', max_length=1000, 
+							  widget=forms.Textarea(
+							  	attrs={'cols':80, 'rows':10, 'autofocus':True}
+							  	)
+							  )
 
 class PhotoForm(forms.Form):
-	photo = forms.ImageField(label='Photo', required=False, widget=forms.ClearableFileInput(attrs={'multiple': True}))
+	photo = forms.ImageField(label='Photo', required=False, 
+							 widget=forms.ClearableFileInput(
+							 	attrs={'multiple': True}
+							 	)
+							 )
 
 class ArticleModelForm(ModelForm):
 	class Meta:
 		model = Article
 		fields = '__all__'
 
-
-
 class PhotoModelForm(ModelForm):
 	class Meta:
 		model = Photo
 		fields = ['photo']
+
+class HashtagForm(forms.Form):
+	hashtag = forms.CharField(label='Hashtag', max_length=40, required=False)

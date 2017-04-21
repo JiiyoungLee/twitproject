@@ -4,6 +4,8 @@
 </head>
 <body>
 	<h1>SIGNIN Page</h1>
+	<div id="div_error"></div>
+
 	<form method="POST" action="{%url 'minitwitter:signin' %}" enctype="multipart/form-data">
 	{% csrf_token %}
 		{% for field1 in form1 %}
@@ -12,6 +14,7 @@
 			{% if field1.help_text %}
 			{{ field1.help_text}}
 			{% endif %}
+			
 			{% if field1.name == 'password'%}
 				<span id="span_pw_check"></span>
 			{% endif %}
@@ -38,6 +41,7 @@
 			var fieldCheckPassword = document.getElementById('span_pw_check');
 			fieldCheckPassword.innerHTML = "";
 			fieldCheckPassword.style.color='red';
+			document.getElementsByName("btn_signin")[0].setAttribute('disabled',"");
 		}
 		var inputPassword = document.getElementsByName("form1_prefix-password")[0];
 		var inputPasswordCheck = document.getElementsByName("form1_prefix-password_check")[0];
@@ -76,7 +80,7 @@
 		xhttp.onreadystatechange = function() {
 			if (this.readyState == 4 && this.status == 200) {
 				alert(xhttp.responseText);
-				document.getElementsByName("btn_signin")[0].removeAttribute('disabled',"");
+				//document.getElementsByName("btn_signin")[0].removeAttribute('disabled',"");
 			}
 			if (this.readyState == 4 && this.status == 409) {
 				alert(xhttp.responseText);
@@ -89,5 +93,16 @@
 			xhttp.send();
 		});	
 	</script>
+	{% if messages %}
+		{% for message in messages %}
+		<script>
+			var data = '{{ message }}';
+			console.log(data);
+			data = JSON.parse(data.replace(/&quot;/g, '"'));
+			for
+			alert(data.birthday[0].message);
+		</script>
+		{% endfor %}
+	{% endif %}
 </body>
 </html>

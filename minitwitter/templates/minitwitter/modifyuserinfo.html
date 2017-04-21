@@ -37,6 +37,10 @@
 			xhttp.open("GET", "/minitwitter/auth/check/nickname/"+inputNickname[0].value, true);
 			xhttp.send();
 		});
+		var inputNickname = document.getElementById("id_nickname")
+		inputNickname.onchange = function() {
+			document.getElementsByName("btn_modify")[0].setAttribute('disabled',"");
+		}
 	</script>
 </body>
 </html>

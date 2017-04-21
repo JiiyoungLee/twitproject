@@ -37,6 +37,22 @@ class Photo(models.Model):
 
 	def __str__(self):
 		return "article: " + self.article.context
+
+class Hashtag(models.Model):
+	hashtag = models.CharField(max_length=40)
+	counts = models.IntegerField(default=1)
+	created_time = models.DateTimeField(auto_now=False, auto_now_add=True)
+	modified_time = models.DateTimeField(auto_now=True)
+
+	def __str__(self):
+		return "hashtag: " + self.hashtag
+
+class Tagged(models.Model):
+	article = models.ForeignKey(Article)
+	hashtag = models.ForeignKey(Hashtag)
+	created_time = models.DateTimeField(auto_now=False, auto_now_add=True)
+	modified_time = models.DateTimeField(auto_now=True)
+
 #test code
 class Post(models.Model):
 	author = models.CharField(max_length=40)
