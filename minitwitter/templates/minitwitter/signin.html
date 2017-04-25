@@ -80,7 +80,6 @@
 		xhttp.onreadystatechange = function() {
 			if (this.readyState == 4 && this.status == 200) {
 				alert(xhttp.responseText);
-				//document.getElementsByName("btn_signin")[0].removeAttribute('disabled',"");
 			}
 			if (this.readyState == 4 && this.status == 409) {
 				alert(xhttp.responseText);
@@ -97,7 +96,6 @@
 		{% for message in messages %}
 		<script>
 			var data = '{{ message }}';
-			console.log(data);
 			data = JSON.parse(data.replace(/&quot;/g, '"'));
 			for
 			alert(data.birthday[0].message);

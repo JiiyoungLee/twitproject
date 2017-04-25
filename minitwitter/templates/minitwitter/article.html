@@ -13,15 +13,34 @@
 	<form method="POST" action="{{request.path}}" enctype="multipart/form-data">
 	{% csrf_token %}
 		{{ form1.as_p }}
-		<input type="text" name="hashtag_field" class="hashtag_field" {% if these_hashtags %} value="{{ these_hashtags }}" {% endif %} readonly></div><br>
+		<script>
+		var value = "";
+		{% if form1.objects.tagged_set.all %} 
+			{% for tagged in form1.objects.tagged_set.all %}
+				value += "{{ tagged.hashtag.hashtag }}" 
+			{% endfor %}
+		{% endif %}
+		</script>
+		<input type="text" name="hashtag_field" class="hashtag_field" 
+		 readonly></div>
+		 <script>
+		var value = "";
+		{% if article.tagged_set.all %} 
+			{% for tagged in article.tagged_set.all %}
+				value += "{{ tagged.hashtag.hashtag }}  " 
+			{% endfor %}
+		{% endif %}
+		document.getElementsByName("hashtag_field")[0].value = value;
+		</script>
+		 <br>
 		{{ form3.label_tag }} {{ form3 }}
 		{% if form2 %}
 			{{ form2.as_p }}
 		{% endif %}
-		{% if these_photos %}
-			{% for this_photo in these_photos %}
-				<img src="/minitwitter/uploads/{{ this_photo.photo }}" width="150px" height="100px" id="img{{ this_photo.id }}">
-				<input type="button" name="btn_delete_img" value="x" id="btn_delete_img{{ this_photo.id }}">
+		{% if article.photo_set.all %}
+			{% for photo in article.photo_set.all %}
+				<img src="/minitwitter/uploads/{{ photo.photo }}" width="150px" height="100px" id="img{{ photo.id }}">
+				<input type="button" name="btn_delete_img" value="x" id="btn_delete_img{{ photo.id }}">
 				<br>
 			{% endfor %}
 		{% endif %}

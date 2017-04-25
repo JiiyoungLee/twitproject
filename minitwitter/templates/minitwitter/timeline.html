@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<style>
+	.link_page {
+		text-decoration: none;
+		border : 1px solid #330000;
+		border-radius: 2px;
+		background-color: #ffe6e6;
+	}
+	.link_page:link, .link_page:visited {
+		color: #330000;
+	}
+	</style>
 </head>
 <body>
 	<h1>TIMELINE Page</h1>
@@ -20,24 +31,33 @@
 		<input type="submit" value="logout">
 	</form>
 	{% if articles %}
-		{% for item in articles %}
+		{% for article in articles %}
 			<p>
-			<span name="span_nickname" id="{{ item.article.id }}">{{ item.article.author.nickname }}</span> {{ item.article.modified_time|date:"Y/m/d H:i"}}<br>
-			{{ item.article.context }}<br>
-			{% if item.photos %}
-			{% for photo in item.photos %}
+			<span name="span_nickname" id="{{ article.id }}">{{ article.author.nickname }}</span> {{ article.modified_time|date:"Y/m/d H:i"}}<br>
+			{{ article.context }}<br>
+			{% if article.photo_set.all %}
+			{% for photo in article.photo_set.all %}
 				<img src="/minitwitter/uploads/{{ photo.photo}}" width="150px" height="100px">
 			{% endfor %}
 			{% endif %}
 			<br>
-			{% if item.tags %}
-			{% for tag in item.tags %}
+			{% if article.tagged_set.all %}
+			{% for tag in article.tagged_set.all %}
 				<a href="{% url 'minitwitter:search_article' tag.hashtag.hashtag%}">{{ tag.hashtag.hashtag }}</a>
 			{% endfor %}		
 			{% endif %}
-			<form method="GET" action="{% url 'minitwitter:modify_article' item.article.id %}"><input type="submit" value="modify" name="btn_modify"></form>
+			<form method="GET" action="{% url 'minitwitter:modify_article' article.id %}"><input type="submit" value="modify" name="btn_modify"></form>
 			</p>
 		{% endfor %}
+		{% if articles.has_previous %}
+			<a href="?page=1" class="link_page"><<</a>
+			<a href="?page={{ articles.previous_page_number }}" class="link_page"><</a>
+		{% endif %}
+		Page {{ articles.number }}
+		{% if articles.has_next %}
+			<a href="?page={{ articles.next_page_number }}" class="link_page">></a>
+			<a href="?page={{ articles.paginator.num_pages }}" class="link_page">>></a>
+		{% endif %}
 	{% else %}
 	<h3>NO ARTICLES.</h3>
 	{% endif %}

@@ -40,7 +40,7 @@ class Photo(models.Model):
 
 class Hashtag(models.Model):
 	hashtag = models.CharField(max_length=40)
-	counts = models.IntegerField(default=1)
+	counts = models.IntegerField(default=0)
 	created_time = models.DateTimeField(auto_now=False, auto_now_add=True)
 	modified_time = models.DateTimeField(auto_now=True)
 

@@ -12,32 +12,39 @@ from django.contrib import messages
 import os
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.db import transaction
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 # Create your views here.
+@transaction.non_atomic_requests
 def index(request):
 	return HttpResponseRedirect(reverse('minitwitter:login'))
+
 
 class SigninView(View):
 	template_name = 'minitwitter/signin.html'
 
+	@transaction.non_atomic_requests
 	def get(self, request):
 		form1 = SigninUserForm(prefix='form1_prefix')
 		form2 = SigninMemberForm(prefix='form2_prefix')
 		context = {'form1': form1, 'form2':form2}
 		return render(request, self.template_name, context)
-
+	
+	@transaction.atomic
 	def post(self, request):
 		form1 = SigninUserForm(request.POST, prefix='form1_prefix')
 		form2 = SigninMemberForm(request.POST, request.FILES, prefix='form2_prefix')
 		context = {'form1': form1, 'form2':form2}
 		if form1.is_valid():
-			username=form1.cleaned_data['user_name']
-			password=form1.cleaned_data['password']
-			email=form1.cleaned_data['email']
-			input_user = User(username=username, email=email)
-			input_user.set_password(password)
-			input_user.save()
 			if form2.is_valid():
+				username=form1.cleaned_data['user_name']
+				password=form1.cleaned_data['password']
+				email=form1.cleaned_data['email']
+				input_user = User(username=username, email=email)
+				input_user.set_password(password)
+				input_user.save()
+
 				nickname=form2.cleaned_data['nickname']
 				birthday=form2.cleaned_data['birthday']
 				gender=form2.cleaned_data['gender']
@@ -47,7 +54,6 @@ class SigninView(View):
 				input_member.save()
 				return HttpResponseRedirect(reverse('minitwitter:index'))
 			else:
-				input_user.delete()
 				messages.error(request, form2.errors.as_json())
 				return render(request, self.template_name, context)
 		else:
@@ -87,17 +93,20 @@ class TimelineView(View):
 	template_name = 'minitwitter/timeline.html'
 
 	@method_decorator(login_required)
+	@transaction.non_atomic_requests
 	def get(self, request):
 		this_member = Member.objects.get(user=request.user)
-		articles = Article.objects.all().order_by('-modified_time')
-		articles_array = []
-		for article in articles:
-			photos = Photo.objects.filter(article=article)
-			tags = Tagged.objects.filter(article=article)
-			articles_array.append({'article': article, 
-								   'photos': photos, 
-								   'tags': tags})
-		context = {'this_member': this_member, 'articles': articles_array}
+		article_list = Article.objects.all().order_by('-modified_time')
+		paginator = Paginator(article_list, 10)
+
+		page = request.GET.get('page')
+		try:
+			articles = paginator.page(page)
+		except PageNotAnInteger:
+			articles = paginator.page(1)
+		except EmptyPage:
+			articles = paginator.page(paginator.num_pages)
+		context = {'this_member': this_member, 'articles': articles }
 		return render(request, self.template_name, context)
 """
 def timeline(request):
@@ -113,17 +122,21 @@ class MyTimelineView(View):
 	template_name = 'minitwitter/timeline.html'
 
 	@method_decorator(login_required)
+	@transaction.non_atomic_requests
 	def get(self, request):
 		this_member = Member.objects.get(user=request.user)
-		articles = Article.objects.filter(author=this_member).order_by('-modified_time')
-		articles_array = []
-		for article in articles:
-			photos = Photo.objects.filter(article=article)
-			tags = Tagged.objects.filter(article=article)
-			articles_array.append({'article': article, 
-								   'photos': photos, 'tags': tags})
+		article_list = Article.objects.filter(author=this_member).order_by('-modified_time')
+		paginator = Paginator(article_list, 10)
+
+		page = request.GET.get('page')
+		try:
+			articles = paginator.page(page)
+		except PageNotAnInteger:
+			articles = paginator.page(1)
+		except EmptyPage:
+			articles = paginator.page(paginator.num_pages)
 		context = {'this_member': this_member, 
-				   'articles': articles_array, 'flag': 'me'}
+				   'articles': articles, 'flag': 'me'}
 		return render(request, self.template_name, context)
 
 """@login_required
@@ -140,6 +153,7 @@ class WriteArticleView(View):
 	template_name = 'minitwitter/article.html'
 	
 	@method_decorator(login_required)
+	@transaction.non_atomic_requests
 	def get(self, request):
 		form1 = ArticleForm(prefix='form1_prefix')
 		form2 = PhotoForm(prefix='form2_prefix')
@@ -148,24 +162,25 @@ class WriteArticleView(View):
 		return render(request, self.template_name, context)
 	
 	@method_decorator(login_required)
+	@transaction.atomic
 	def post(self, request):
-		print(request.POST)
 		form1 = ArticleForm(request.POST, prefix='form1_prefix')
 		form2 = PhotoForm(request.POST, request.FILES, prefix='form2_prefix')
 		context = {'form1': form1, 'form2':form2}
 		if form1.is_valid():
-			context=form1.cleaned_data['context']
-			author = Member.objects.get(user=request.user)
-			input_article = Article(author=author, context=context)
-			input_article.save()
-			
-			files = request.FILES.getlist('form2_prefix-photo')
 			if form2.is_valid():
+				context=form1.cleaned_data['context']
+				author = Member.objects.get(user=request.user)
+				input_article = Article(author=author, context=context)
+				input_article.save()
+			
+				files = request.FILES.getlist('form2_prefix-photo')
 				for file in files:
 					input_photo = Photo(article=input_article, photo=file)
 					input_photo.save()
 				hashtags = request.POST['hashtag_field']
-				initial_offset = 0
+				hashtags_array = hashtags.split('  ')
+				"""initial_offset = 0
 				last_offset = 0
 				i = 0
 				print(len(hashtags))
@@ -185,12 +200,20 @@ class WriteArticleView(View):
 						else:
 							input_hashtag = Hashtag(hashtag=current_hashtag)
 						input_hashtag.save()
-						new_tagged = Tagged(article=input_article, 
-											hashtag=input_hashtag)
-						new_tagged.save()
+						Tagged(article=input_article, hashtag=input_hashtag).save()
 
 						print(hashtags[initial_offset:last_offset])
 						initial_offset += last_offset - initial_offset
+				return HttpResponseRedirect(reverse('minitwitter:timeline'))
+				"""
+				for i in range(len(hashtags_array) - 1):
+					if hashtags_array[i][0] == '#':
+						hashtag, created = Hashtag.objects.get_or_create(hashtag=hashtags_array[i])
+						hashtag.counts += 1
+						hashtag.save()
+						Tagged(article=input_article, hashtag=hashtag).save()
+					else:
+						pass
 				return HttpResponseRedirect(reverse('minitwitter:timeline'))
 			else:
 				print(form2.errors)
@@ -254,47 +277,40 @@ def write_article(request):
 """
 class ModifyArticleView(View):
 	template_name = 'minitwitter/article.html'
+
 	@method_decorator(login_required)
+	@transaction.non_atomic_requests
 	def get(self, request, *args, **kwargs):
 		article_id = kwargs['article_id']
 		this_article = Article.objects.get(id=article_id)
-		these_photos = Photo.objects.filter(article_id=article_id)
-		photos_list = []
+		
 		form1 = ArticleForm({'context': this_article.context})
-		if len(these_photos) == 0:
-			form2 = PhotoForm()
-		else:
-			for this_photo in these_photos:
-				form2 = PhotoForm()
-				photos_list.append({'id': this_photo.id, 
-									'photo': this_photo.photo})
-		tagged = Tagged.objects.filter(article_id=article_id)
-		these_hashtags = ""
-		for item in tagged:
-			these_hashtags += item.hashtag.hashtag+"  "
+		form2 = PhotoForm()
 		form3 = HashtagForm(prefix='form3_prefix')
-		context = {'form1': form1, 'form2': form2, 'form3': form3,
-		 'these_photos': photos_list, 'these_hashtags': these_hashtags}
+		context = {'form1': form1, 'form2': form2, 'form3': form3, 'article': this_article }
 		return render(request, self.template_name, context)
 	
 	@method_decorator(login_required)
+	@transaction.atomic
 	def post(self, request, *args, **kwargs):
 		form1 = ArticleForm(request.POST)
 		form2 = PhotoForm(request.POST, request.FILES)
 		article_id = kwargs['article_id']
 		context = {'form1': form1, 'form2':form2}
 		if form1.is_valid():
-			this_article = Article.objects.get(id=article_id)
-			context=form1.cleaned_data['context']
-			this_article.context = context
-			this_article.save()
-			files = request.FILES.getlist('photo')
 			if form2.is_valid():
+				this_article = Article.objects.get(id=article_id)
+				context=form1.cleaned_data['context']
+				this_article.context = context
+				this_article.save()
+				
+				files = request.FILES.getlist('photo')
 				for file in files:
 					input_photo = Photo(article=this_article, photo=file)
 					input_photo.save()
 				hashtags = request.POST['hashtag_field']
-				initial_offset = 0
+				hashtags_array = hashtags.split('  ')
+				"""initial_offset = 0
 				last_offset = 0
 				i = 0
 				existing_hashtags = Tagged.objects.filter(article=this_article)
@@ -321,10 +337,17 @@ class ModifyArticleView(View):
 							else:
 								input_hashtag = Hashtag(hashtag=current_hashtag)
 							input_hashtag.save()
-							new_tagged = Tagged(article=this_article,
-							 					hashtag=input_hashtag)
-							new_tagged.save()
-						initial_offset += last_offset - initial_offset
+							Tagged(article=this_article, hashtag=input_hashtag).save()
+						initial_offset += last_offset - initial_offset"""
+				for i in range(len(hashtags_array) - 1):
+					if hashtags_array[i][0] == '#':
+						hashtag, tag_created = Hashtag.objects.get_or_create(hashtag=hashtags_array[i])
+						tagged, tagged_created = Tagged.objects.get_or_create(hashtag=hashtag, article =this_article)
+						if tag_created or tagged_created:
+							hashtag.counts += 1
+						hashtag.save()
+					else:
+						pass
 				return HttpResponseRedirect(reverse('minitwitter:timeline'))
 			else:
 				print(form2.errors)
@@ -425,6 +448,7 @@ class ModifyUserView(View):
 	template_name = 'minitwitter/modifyuserinfo.html'
 
 	@method_decorator(login_required)
+	@transaction.non_atomic_requests
 	def get(self, request):
 		this_member = Member.objects.get(user=request.user)
 		initial_context = {'nickname': this_member.nickname,
@@ -436,6 +460,7 @@ class ModifyUserView(View):
 		return render(request, self.template_name, context)
 
 	@method_decorator(login_required)
+	@transaction.atomic
 	def post(self, request):
 		form = ModifyMemberForm(request.POST, request.FILES)
 		context = {'form': form}
@@ -488,6 +513,7 @@ def modify_user(request):
 			print(form.errors)	
 	return HttpResponseRedirect(reverse('minitwitter:timeline'))
 """
+@transaction.non_atomic_requests
 def uploads(request, file):
 	if file[0:8] == 'profile/':
 		member = Member.objects.get(profile=file)
@@ -497,6 +523,7 @@ def uploads(request, file):
 		return HttpResponse(photos.photo)
 
 @login_required
+@transaction.atomic
 def delete_image(request, photo_id):
 	photo = Photo.objects.get(id=photo_id)
 	photo_path = photo.photo
@@ -504,6 +531,7 @@ def delete_image(request, photo_id):
 	os.remove(os.path.join(settings.MEDIA_ROOT, str(photo_path)))
 	return HttpResponse("")
 
+@transaction.non_atomic_requests
 def check_user_name(request, user_name):
 	try:
 		user = User.objects.get(username=user_name)
@@ -512,6 +540,7 @@ def check_user_name(request, user_name):
 	else:
 		return HttpResponse("You can't use that User Name.", status=409)
 
+@transaction.non_atomic_requests
 def check_nickname(request, nickname):
 	try:
 		member = Member.objects.get(nickname=nickname)
@@ -524,18 +553,26 @@ class SearchArticleView(View):
 	template_name = 'minitwitter/timeline.html'
 	
 	@method_decorator(login_required)
+	@transaction.non_atomic_requests
 	def get(self, request, *args, **kwargs):
 		this_member = Member.objects.get(user=request.user)
 		hashtag = Hashtag.objects.get(hashtag=kwargs['hashtag'])
 		tagged_articles = Tagged.objects.filter(hashtag=hashtag).order_by('-modified_time')
-		articles_array = []
+		article_list = []
 		for tagged_article in tagged_articles:
-			photos = Photo.objects.filter(article=tagged_article.article)
-			tags = Tagged.objects.filter(article=tagged_article.article)
-			articles_array.append({'article': tagged_article.article,
-							 	   'photos': photos, 
-							 	   'tags': tags})
-		context = {'this_member': this_member, 'articles': articles_array}
+			article_list.append(tagged_article.article)
+
+		paginator = Paginator(article_list, 5)
+
+		page = request.GET.get('page')
+		try:
+			articles = paginator.page(page)
+		except PageNotAnInteger:
+			articles = paginator.page(1)
+		except EmptyPage:
+			articles = paginator.page(paginator.num_pages)
+
+		context = {'this_member': this_member, 'articles': articles}
 		return render(request, self.template_name, context)
 """
 @login_required
