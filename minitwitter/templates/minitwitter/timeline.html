@@ -108,7 +108,7 @@
 	for (let i = 0; i < btnModifyComment.length; i++) {
 		btnModifyComment[i].addEventListener('click', function() {
 
-			xhttp.open("GET", "/minitwitter/comments/modify/"+this.id, true);
+			xhttp.open("GET", "/minitwitter/comments/modify/"+this.id, false);
 			xhttp.send();
 		});
 		xhttp.onreadystatechange = function() {

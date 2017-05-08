@@ -21,6 +21,6 @@ urlpatterns = [
 	url(r'^timeline/public$', views.ArticleList.as_view(), name='public_timeline'),
 	url(r'^articles/public/search/(?P<hashtag>.+)$', views.SearchArticleList.as_view(), name='public_search_article'),
 	url(r'^comments/(?P<article_id>\d+)/$', views.AddComment.as_view(), name='comment'),
-	url(r'^comments/modify/(?P<comment_id>\d+)/$', views.ModifyComment.as_view(), name='modify_comment'),
+	url(r'^comments/modify/(?P<comment_id>\d+)$', views.ModifyComment.as_view(), name='modify_comment'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

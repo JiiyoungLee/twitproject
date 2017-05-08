@@ -133,3 +133,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
 
 LOGIN_REDIRECT_URL = '/minitwitter/timeline'
 LOGOUT_REDIRECT_URL = '/minitwitter/auth/login'
+APPEND_SLASH=False

@@ -616,6 +616,7 @@ class SearchArticleView(View):
 		this_member = Member.objects.get(user=request.user)
 		hashtag = Hashtag.objects.get(hashtag=kwargs['hashtag'])
 		articles = Article.objects.filter(hashtag=hashtag).order_by('-modified_time')
+		comment_form = CommentForm()
 
 		paginator = Paginator(articles, 5)
 
@@ -627,7 +628,7 @@ class SearchArticleView(View):
 		except EmptyPage:
 			articles = paginator.page(paginator.num_pages)
 
-		context = {'this_member': this_member, 'articles': articles}
+		context = {'this_member': this_member, 'articles': articles, 'comment': comment_form}
 		return render(request, self.template_name, context)
 		
 class AddComment(View):
