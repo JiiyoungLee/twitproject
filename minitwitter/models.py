@@ -20,9 +20,19 @@ class Member(models.Model):
 	def __str__(self):
 		return 'id: ' + self.user.username + ', email: ' + self.user.email
 
+class Hashtag(models.Model):
+	hashtag = models.CharField(max_length=40)
+	counts = models.IntegerField(default=0)
+	created_time = models.DateTimeField(auto_now=False, auto_now_add=True)
+	modified_time = models.DateTimeField(auto_now=True)
+
+	def __str__(self):
+		return "hashtag: " + self.hashtag
+
 class Article(models.Model):
 	author = models.ForeignKey(Member)
 	context = models.CharField(max_length=1000)
+	hashtag = models.ManyToManyField('Hashtag')
 	created_time = models.DateTimeField(auto_now=False, auto_now_add=True)
 	modified_time = models.DateTimeField(auto_now=True)
 
@@ -38,20 +48,17 @@ class Photo(models.Model):
 	def __str__(self):
 		return "article: " + self.article.context
 
-class Hashtag(models.Model):
-	hashtag = models.CharField(max_length=40)
-	counts = models.IntegerField(default=0)
+class Comment(models.Model):
+	author = models.ForeignKey(Member)
+	article = models.ForeignKey(Article, default=1)
+	context = models.CharField(max_length=200)
 	created_time = models.DateTimeField(auto_now=False, auto_now_add=True)
 	modified_time = models.DateTimeField(auto_now=True)
 
 	def __str__(self):
-		return "hashtag: " + self.hashtag
+		return "author: " + self.author.nickname + ", context: " + self.context
 
-class Tagged(models.Model):
-	article = models.ForeignKey(Article)
-	hashtag = models.ForeignKey(Hashtag)
-	created_time = models.DateTimeField(auto_now=False, auto_now_add=True)
-	modified_time = models.DateTimeField(auto_now=True)
+
 
 #test code
 class Post(models.Model):

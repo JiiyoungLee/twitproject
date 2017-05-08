@@ -1,6 +1,6 @@
 from django.forms import ModelForm, Form
 from django import forms
-from .models import Member, Article, Photo, Hashtag, Tagged
+from .models import Member, Article, Photo, Hashtag, Comment
 from django.contrib.auth.models import User
 
 class LoginUserForm(ModelForm):
@@ -57,9 +57,12 @@ class SigninMemberModelForm(ModelForm):
 class ArticleForm(forms.Form):
 	context = forms.CharField(label='Context', max_length=1000, 
 							  widget=forms.Textarea(
-							  	attrs={'cols':80, 'rows':10, 'autofocus':True}
+							  	attrs={'cols':50, 'rows':5, 'autofocus':True}
 							  	)
 							  )
+
+class CommentForm(forms.Form):
+	context = forms.CharField(label='Context', max_length=200)
 
 class PhotoForm(forms.Form):
 	photo = forms.ImageField(label='Photo', required=False, 

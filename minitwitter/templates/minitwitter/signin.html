@@ -1,41 +1,50 @@
-<!DOCTYPE html>
-<html>
-<head>
-</head>
-<body>
-	<h1>SIGNIN Page</h1>
-	<div id="div_error"></div>
-
+{% extends 'minitwitter/base.html' %}
+{% block content %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'css/minitwitter.css' %}">
+<div class="container">
+<h1>SIGNIN Page</h1>
+	<div class="div_signin">
 	<form method="POST" action="{%url 'minitwitter:signin' %}" enctype="multipart/form-data">
 	{% csrf_token %}
 		{% for field1 in form1 %}
-		<p id="p{{ forloop.counter }}">
+			<p id="p{{ forloop.counter }}">
 			{{ field1.label_tag}}{{ field1 }}
 			{% if field1.help_text %}
-			{{ field1.help_text}}
+				{{ field1.help_text}}
 			{% endif %}
-			
 			{% if field1.name == 'password'%}
 				<span id="span_pw_check"></span>
 			{% endif %}
 			{% if field1.name == 'user_name' %}
 				<input type="button" value="check" id="btn_check_username">
+				<script>
+					document.getElementById('id_form1_prefix-user_name').focus();
+				</script>
 			{% endif %}
-		</p>
+			</p>
 		{% endfor %}
 		{% for field2 in form2 %}
-		<p>
+			<p>
 			{{ field2.label_tag}}{{ field2 }}
 			{% if field2.help_text %}
-			{{ field2.help_text}}
+				{{ field2.help_text}}
 			{% endif %}
 			{% if field2.name == 'nickname' %}
 				<input type="button" value="check" id="btn_check_nickname">
 			{% endif %}
-		</p>
+			</p>
 		{% endfor %}
-		<input type="submit" value="SIGNIN" name="btn_signin">		
+		<div class="div_btn_signin">
+		<input type="submit" value="SIGNIN" name="btn_signin" class="btn btn-primary">
+		</div>		
 	</form>
+	</div>
+	<style>
+		input[type="file"] {
+			display: inline;
+		}
+	</style>
 	<script>
 		window.onpageshow = function() {
 			var fieldCheckPassword = document.getElementById('span_pw_check');
@@ -56,7 +65,7 @@
 				fieldCheckPassword.style.color='green';
 			}
 		});
-		
+	
 		var btnCheckNickname = document.getElementById("btn_check_nickname");
 		var xhttp2 = new XMLHttpRequest();
 		xhttp2.onreadystatechange = function() {
@@ -97,10 +106,9 @@
 		<script>
 			var data = '{{ message }}';
 			data = JSON.parse(data.replace(/&quot;/g, '"'));
-			for
 			alert(data.birthday[0].message);
 		</script>
 		{% endfor %}
 	{% endif %}
-</body>
-</html>
+</div>
+{% endblock content %}

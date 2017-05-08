@@ -1,25 +1,68 @@
 from django.shortcuts import render, redirect
 from django.core.urlresolvers import reverse
-from .models import Post, Member, Article, Photo, Hashtag, Tagged
+from .models import Post, Member, Article, Photo, Hashtag, Comment
 from django.contrib.auth.models import User
 from .forms import LoginUserForm, SigninUserForm, SigninMemberForm, PhotoForm
-from .forms import ArticleForm, ModifyMemberForm, HashtagForm
+from .forms import ArticleForm, ModifyMemberForm, HashtagForm, CommentForm
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import authenticate
 from django.conf import settings
 from django.views import View
+from django.views.generic import ListView
 from django.contrib import messages
 import os
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.db import transaction
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+import json
 
 # Create your views here.
 @transaction.non_atomic_requests
 def index(request):
 	return HttpResponseRedirect(reverse('minitwitter:login'))
 
+class ArticleList(ListView):
+	template_name = 'minitwitter/pub_timeline.html'
+	model = Article
+	paginate_by = 5
+
+	def get_context_data(self, **kwargs):
+		context = super(ArticleList, self).get_context_data(**kwargs)
+		paginator = Paginator(Article.objects.all().order_by('-modified_time'), self.paginate_by)
+
+		page = self.request.GET.get('page')
+		try:
+			articles = paginator.page(page)
+		except PageNotAnInteger:
+			articles = paginator.page(1)
+		except EmptyPage:
+			articles = paginator.page(paginator.num_pages)
+		context['articles']= articles 
+		
+		return context
+
+class SearchArticleList(ListView):
+	template_name = 'minitwitter/pub_timeline.html'
+	model = Article
+	paginate_by = 5
+
+	def get_context_data(self, **kwargs):
+		context = super(SearchArticleList, self).get_context_data(**kwargs)
+		hashtag = Hashtag.objects.get(hashtag=self.kwargs['hashtag'])
+		article = Article.objects.filter(hashtag=hashtag).order_by('-modified_time')
+		paginator = Paginator(article, self.paginate_by)
+
+		page = self.request.GET.get('page')
+		try:
+			articles = paginator.page(page)
+		except PageNotAnInteger:
+			articles = paginator.page(1)
+		except EmptyPage:
+			articles = paginator.page(paginator.num_pages)
+		context['articles']= articles 
+		
+		return context
 
 class SigninView(View):
 	template_name = 'minitwitter/signin.html'
@@ -98,6 +141,7 @@ class TimelineView(View):
 		this_member = Member.objects.get(user=request.user)
 		article_list = Article.objects.all().order_by('-modified_time')
 		paginator = Paginator(article_list, 10)
+		comment_form = CommentForm()
 
 		page = request.GET.get('page')
 		try:
@@ -106,7 +150,7 @@ class TimelineView(View):
 			articles = paginator.page(1)
 		except EmptyPage:
 			articles = paginator.page(paginator.num_pages)
-		context = {'this_member': this_member, 'articles': articles }
+		context = {'this_member': this_member, 'articles': articles, 'comment': comment_form}
 		return render(request, self.template_name, context)
 """
 def timeline(request):
@@ -127,6 +171,7 @@ class MyTimelineView(View):
 		this_member = Member.objects.get(user=request.user)
 		article_list = Article.objects.filter(author=this_member).order_by('-modified_time')
 		paginator = Paginator(article_list, 10)
+		comment_form = CommentForm()
 
 		page = request.GET.get('page')
 		try:
@@ -136,7 +181,7 @@ class MyTimelineView(View):
 		except EmptyPage:
 			articles = paginator.page(paginator.num_pages)
 		context = {'this_member': this_member, 
-				   'articles': articles, 'flag': 'me'}
+				   'articles': articles, 'flag': 'me', 'comment': comment_form}
 		return render(request, self.template_name, context)
 
 """@login_required
@@ -211,7 +256,8 @@ class WriteArticleView(View):
 						hashtag, created = Hashtag.objects.get_or_create(hashtag=hashtags_array[i])
 						hashtag.counts += 1
 						hashtag.save()
-						Tagged(article=input_article, hashtag=hashtag).save()
+						input_article.hashtag.add(hashtag)
+						input_article.save()
 					else:
 						pass
 				return HttpResponseRedirect(reverse('minitwitter:timeline'))
@@ -293,6 +339,7 @@ class ModifyArticleView(View):
 	@method_decorator(login_required)
 	@transaction.atomic
 	def post(self, request, *args, **kwargs):
+		print(request.POST)
 		form1 = ArticleForm(request.POST)
 		form2 = PhotoForm(request.POST, request.FILES)
 		article_id = kwargs['article_id']
@@ -342,10 +389,21 @@ class ModifyArticleView(View):
 				for i in range(len(hashtags_array) - 1):
 					if hashtags_array[i][0] == '#':
 						hashtag, tag_created = Hashtag.objects.get_or_create(hashtag=hashtags_array[i])
-						tagged, tagged_created = Tagged.objects.get_or_create(hashtag=hashtag, article =this_article)
-						if tag_created or tagged_created:
+						if tag_created: 
 							hashtag.counts += 1
-						hashtag.save()
+							hashtag.save()
+							this_article.hashtag.add(hashtag)
+							this_article.save()
+						else:
+							if hashtag in this_article.hashtag.all():
+								pass
+							else:
+								this_article.hashtag.add(hashtag)
+								hashtag.counts += 1
+								hashtag.save()
+								this_article.save()
+
+						
 					else:
 						pass
 				return HttpResponseRedirect(reverse('minitwitter:timeline'))
@@ -557,12 +615,9 @@ class SearchArticleView(View):
 	def get(self, request, *args, **kwargs):
 		this_member = Member.objects.get(user=request.user)
 		hashtag = Hashtag.objects.get(hashtag=kwargs['hashtag'])
-		tagged_articles = Tagged.objects.filter(hashtag=hashtag).order_by('-modified_time')
-		article_list = []
-		for tagged_article in tagged_articles:
-			article_list.append(tagged_article.article)
+		articles = Article.objects.filter(hashtag=hashtag).order_by('-modified_time')
 
-		paginator = Paginator(article_list, 5)
+		paginator = Paginator(articles, 5)
 
 		page = request.GET.get('page')
 		try:
@@ -574,6 +629,44 @@ class SearchArticleView(View):
 
 		context = {'this_member': this_member, 'articles': articles}
 		return render(request, self.template_name, context)
+		
+class AddComment(View):
+	template_name = 'minitwitter/timeline.html'
+
+	@method_decorator(login_required)
+	@transaction.non_atomic_requests
+	def post(self, request, *args, **kwargs):
+		input_comment = CommentForm(request.POST)
+		article_id = kwargs['article_id']
+		if input_comment.is_valid():
+			this_article = Article.objects.get(id=article_id)
+			author = Member.objects.get(user=request.user)
+			context=input_comment.cleaned_data['context']
+			comment = Comment(author=author, article=this_article, context=context)
+			comment.save()
+			return HttpResponseRedirect(reverse('minitwitter:timeline'))
+		else:
+			return render(request, self.template_name)
+
+class ModifyComment(View):
+	template_name = 'minitwitter/timeline.html'
+
+	@method_decorator(login_required)
+	@transaction.non_atomic_requests
+	def get(self, request, *args, **kwargs):
+		comment_id = kwargs['comment_id']
+		this_comment = Comment.objects.get(id=comment_id)
+		return HttpResponse(json.dumps({'id': this_comment.id, 'context': this_comment.context}))
+
+	def post(self, request, *args, **kwargs):
+		print(request.POST)
+		print(kwargs['comment_id'])
+		comment_id = kwargs['comment_id']
+		this_comment = Comment.objects.get(id=comment_id)
+		this_comment.context = request.POST['comment_context']
+		this_comment.save()
+		return HttpResponseRedirect(reverse('minitwitter:timeline'))
+
 """
 @login_required
 def search_article(request, hashtag):

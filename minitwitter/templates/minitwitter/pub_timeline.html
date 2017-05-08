@@ -1,0 +1,62 @@
+{% extends 'minitwitter/base.html' %}
+{% block content %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'css/minitwitter.css' %}">
+<div class="container">	
+<h1>PUBLIC TIMELINE</h1>
+	<div class="div_buttons_2">
+	<div class="div_first_form">
+	<form method="GET" action="{%url 'minitwitter:index'%}">
+		<input type="submit" value="LOG IN" class="btn btn-success">
+	</form>
+	</div>
+	<div>
+	<form method="GET" action="{%url 'minitwitter:signin'%}">	
+		<input type="submit" value="SIGN IN" class="btn btn-info">
+	</form>
+	</div>
+	</div>
+	<div class="container">
+	{% if articles %}
+		{% for article in articles %}	
+			<div class="article">	
+			<div class="div_nickname"><span name="span_nickname" id="{{ article.id }}"><strong>{{ article.author.nickname }}</strong></span></div> <div class="div_date">{{ article.modified_time|date:"Y/m/d H:i"}}</div><br>
+			{{ article.context }}<br>
+			{% if article.photo_set.all %}
+				{% for photo in article.photo_set.all %}
+					<img src="/minitwitter/uploads/{{ photo.photo}}" width="auto" height="150px">
+				{% endfor %}
+			{% endif %}<br>
+			{% if article.hashtag.all %}
+				{% for tag in article.hashtag.all %}
+					<a href="{% url 'minitwitter:public_search_article' tag.hashtag %}"><mark>{{ tag.hashtag }}</mark></a>
+				{% endfor %}		
+			{% endif %}
+			{% if article.comment_set.all %}
+				{% for comment in article.comment_set.all %}
+					<p>
+					{{ comment.author.nickname }}
+					{{ comment.context }}
+					{{ comment.created_time|date:"Y/m/d H:i" }}
+					</p>
+				{% endfor %}
+			{% endif %}	
+			</div>
+		{% endfor %}
+	{% else %}
+		<h3>NO ARTICLES.</h3>
+	{% endif %}
+	</div>
+	<div class="page">
+		{% if articles.has_previous %}
+			<a href="?page=1" class="link_page"><<</a>
+			<a href="?page={{ articles.previous_page_number }}" class="link_page"><</a>
+		{% endif %}
+			Page {{ articles.number }}
+		{% if articles.has_next %}
+			<a href="?page={{ articles.next_page_number }}" class="link_page">></a>
+			<a href="?page={{ articles.paginator.num_pages }}" class="link_page">>></a>
+		{% endif %}
+	</div>
+</div>
+{% endblock content %}

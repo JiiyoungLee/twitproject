@@ -1,54 +1,81 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<style>
-	.link_page {
-		text-decoration: none;
-		border : 1px solid #330000;
-		border-radius: 2px;
-		background-color: #ffe6e6;
-	}
-	.link_page:link, .link_page:visited {
-		color: #330000;
-	}
-	</style>
-</head>
-<body>
-	<h1>TIMELINE Page</h1>
-	ID: {{ this_member.user.username }}
-	Nickname: {{ this_member.nickname }}
-	<img src="/minitwitter/uploads/{{ this_member.profile}}" width="35px" height="35px">
-	<form method="GET" {% if flag %} action="{%url 'minitwitter:timeline'%}" {% else %} action="{%url 'minitwitter:my_timeline'%}" {% endif %}>
-	{% if flag %} <input type="submit" value="timeline"> {% else %} <input type="submit" value="my timeline"> {% endif %}
+{% extends 'minitwitter/base.html' %}
+{% block content %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'css/minitwitter.css' %}">
+<div class="container">
+
+<h1>TIMELINE Page</h1>
+	<div class="div_user">
+		<img src="/minitwitter/uploads/{{ this_member.profile}}" width="35px" height="35px">
+		<strong>{{ this_member.nickname }}</strong>
+	</div><br>
+	<div class="div_buttons">
+	<form method="GET" {% if flag %} action="{%url 'minitwitter:timeline'%}"	{% else %} action="{%url 'minitwitter:my_timeline'%}"	{% endif %} class="div_first_form">
+		{% if flag %} 
+			<input type="submit" value="timeline" class="btn btn-success"> 
+		{% else %} 
+			<input type="submit" value="my timeline" class="btn btn-success"> 
+		{% endif %}
 	</form>
-	<form method="GET" action="{%url 'minitwitter:write_article'%}">
-		<input type="submit" value="write">
+	<form method="GET" action="{%url 'minitwitter:write_article'%}" class="div_first_form">
+		<input type="submit" value="write" class="btn btn-info">
 	</form>
-	<form method="GET" action="{%url 'minitwitter:modify_user'%}">
-		<input type="submit" value="modify user info">
+	<form method="GET" action="{%url 'minitwitter:modify_user'%}" class="div_first_form">
+		<input type="submit" value="modify user info" class="btn btn-warning">
 	</form>
 	<form method="GET" action="{%url 'minitwitter:logout'%}">
-		<input type="submit" value="logout">
+		<input type="submit" value="logout" class="btn btn-danger">
 	</form>
+	</div>
+	<div class="container">
 	{% if articles %}
 		{% for article in articles %}
+			<div class="article">
 			<p>
-			<span name="span_nickname" id="{{ article.id }}">{{ article.author.nickname }}</span> {{ article.modified_time|date:"Y/m/d H:i"}}<br>
+			<div class="div_nickname"><img src="/minitwitter/uploads/{{ article.author.profile}}" width="auto" height="16px"><strong><span name="span_nickname" id="{{ article.id }}">{{ article.author.nickname }}</span></strong>
+			</div>
+			<div class="div_date">{{ article.modified_time|date:"Y/m/d H:i"}}
+			</div>
+			<div class="div_btn_modify_article">
+			<form method="GET" action="{% url 'minitwitter:modify_article' article.id %}">
+				<input type="submit" value="modify" name="btn_modify">
+			</form>
+			</div><br>
 			{{ article.context }}<br>
 			{% if article.photo_set.all %}
-			{% for photo in article.photo_set.all %}
-				<img src="/minitwitter/uploads/{{ photo.photo}}" width="150px" height="100px">
-			{% endfor %}
+				{% for photo in article.photo_set.all %}
+					<img src="/minitwitter/uploads/{{ photo.photo}}" width="auto" height="150px">
+				{% endfor %}
+			{% endif %}<br>
+			{% if article.hashtag.all %}
+				{% for tag in article.hashtag.all %}
+					<a href="{% url 'minitwitter:search_article' tag.hashtag %}"><mark>{{ tag.hashtag }}</mark></a>
+				{% endfor %}		
 			{% endif %}
-			<br>
-			{% if article.tagged_set.all %}
-			{% for tag in article.tagged_set.all %}
-				<a href="{% url 'minitwitter:search_article' tag.hashtag.hashtag%}">{{ tag.hashtag.hashtag }}</a>
-			{% endfor %}		
+			{% if article.comment_set.all %}
+				<div class="container div_comment">
+				{% for comment in article.comment_set.all %}
+					<img src="/minitwitter/uploads/{{ comment.author.profile}}" width="auto" height="16px">
+					<strong>{{ comment.author.nickname }}</strong>
+					{{ comment.context }}
+					<span class="comment_date">{{ comment.modified_time|date:"Y/m/d H:i" }}</span>
+					<input type="button" name="btn_modify_comment" id="{{ comment.id }}" value="Edit">
+					<div id="div_comment_{{ comment.id }}"></div>
+					
+				{% endfor %}
+				</div>
 			{% endif %}
-			<form method="GET" action="{% url 'minitwitter:modify_article' article.id %}"><input type="submit" value="modify" name="btn_modify"></form>
+			<div class="div_btn_comment">
+			<form method="POST" action="{% url 'minitwitter:comment' article.id%}">
+			{% csrf_token %}
+				{{ comment.context }}
+				<input type="submit" name="btn_add_comment" value="add comment">	
+			</form>
+			</div>
 			</p>
+			</div>
 		{% endfor %}
+		<div class="page">
 		{% if articles.has_previous %}
 			<a href="?page=1" class="link_page"><<</a>
 			<a href="?page={{ articles.previous_page_number }}" class="link_page"><</a>
@@ -58,19 +85,67 @@
 			<a href="?page={{ articles.next_page_number }}" class="link_page">></a>
 			<a href="?page={{ articles.paginator.num_pages }}" class="link_page">>></a>
 		{% endif %}
+		</div>
 	{% else %}
-	<h3>NO ARTICLES.</h3>
+		<h3>NO ARTICLES.</h3>
 	{% endif %}
-	<script>
-		var article = document.getElementsByName("span_nickname");		
-		var btnModify = document.getElementsByName("btn_modify");
-		for (let i = 0; i < btnModify.length; i++) {
-			if (article[i].innerHTML != '{{ this_member.nickname}}') {
-				btnModify[i].setAttribute('disabled',"");
-			} else {
-				btnModify[i].removeAttribute('disabled',"");
-			}	
+	</div>
+</div>
+<script>
+	var article = document.getElementsByName("span_nickname");		
+	var btnModify = document.getElementsByName("btn_modify");
+	for (let i = 0; i < btnModify.length; i++) {
+		if (article[i].innerHTML != '{{ this_member.nickname}}') {
+			btnModify[i].setAttribute('disabled',"");
+		} else {
+			btnModify[i].removeAttribute('disabled',"");
+		}	
+	};
+
+	var xhttp = new XMLHttpRequest();
+	
+	var btnModifyComment = document.getElementsByName("btn_modify_comment");
+	for (let i = 0; i < btnModifyComment.length; i++) {
+		btnModifyComment[i].addEventListener('click', function() {
+
+			xhttp.open("GET", "/minitwitter/comments/modify/"+this.id, true);
+			xhttp.send();
+		});
+		xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				let thisComment = JSON.parse(this.response)
+				let thisCommentId = "div_comment_"+thisComment.id;
+				let divComment = document.getElementById(thisCommentId);
+			 	let newFormElement = document.createElement("form");
+			 	let commentID = parseInt(thisComment.id);
+			 	newFormElement.setAttribute("method", "POST");
+			 	newFormElement.setAttribute("action", "/minitwitter/comments/modify/"+thisComment.id);
+			 	let csrf_token = "{{ csrf_token }}";
+			 	let newInputTextElement = document.createElement("input");
+			 	newInputTextElement.setAttribute("type", "text");
+			 	newInputTextElement.setAttribute("name", "comment_context");
+			 	newInputTextElement.setAttribute("value", thisComment.context);
+			 	let newCSRFTokenElement = document.createElement("input");
+			 	newCSRFTokenElement.setAttribute("type", "hidden");
+			 	newCSRFTokenElement.setAttribute("name", "csrfmiddlewaretoken");
+			 	newCSRFTokenElement.setAttribute("value", "{{csrf_token}}");
+			 	let newInputButtonElement = document.createElement("input");
+			 	newInputButtonElement.setAttribute("type", "submit");
+			 	newInputButtonElement.setAttribute("value", "Edit");
+
+			 	newFormElement.appendChild(newCSRFTokenElement);
+			 	newFormElement.appendChild(newInputTextElement);
+			 	newFormElement.appendChild(newInputButtonElement);
+
+			 	divComment.appendChild(newFormElement);
+
+				//let divComment = document.getElementById(this_comment.)
+			}
 		};
-	</script>
-</body>
-</html>
+		//btnModifyComment[i].onclick = function() {
+		//	console.log(this.id);			
+		//};
+	}
+	
+</script>
+{% endblock content %}

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+	<h1>Index Page</h1>
+	<form method="POST" {% if form_id%} action="{% url 'minitwitter:modify' form_id %}"
+						{% else %} action="{% url 'minitwitter:write'%}"  {% endif %}>
+		{% csrf_token %}
+		{% if not form_id%} <p><label for="id_author">Author:</label><input type="text" id="id_author" name="author" required value="{{ username }}"></p> {% endif %}
+		{{ form.as_p }}
+		<input type="submit" value="SUBMIT">
+	</form>
+</body>
+</html>

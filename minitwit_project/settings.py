@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'minitwitter',
+    'bootstrap3',
 ]
 
 MIDDLEWARE = [
@@ -78,6 +79,7 @@ DATABASES = {
     'default': {
         #'ENGINE': 'django.db.backends.sqlite3',
         #'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ATOMIC_REQUESTS': True,
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'minitwitter',
         'USER': 'minitwitter_user',

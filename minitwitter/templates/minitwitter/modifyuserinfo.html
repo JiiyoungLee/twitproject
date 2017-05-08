@@ -1,24 +1,31 @@
-<!DOCTYPE html>
-<html>
-<head>
-</head>
-<body>
-	<h1>Modify User Info Page</h1>
+{% extends 'minitwitter/base.html' %}
+{% block content %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'css/minitwitter.css' %}">
+<div class="container">
+<h1>Modify User Info Page</h1>
+	<div class="div_modify">
 	<form method="POST" action="{{request.path}}" enctype="multipart/form-data">
 	{% csrf_token %}
 		{% for field in form %}
 			{{ field.label_tag}}{{ field }}
 			{% if field.help_text %}
-			{{ field.help_text}}
+				{{ field.help_text}}
 			{% endif %}
 			{% if field.name == 'nickname' %}
 				<input type="button" value="check" id="btn_check_nickname">
-			{% endif %}
-			<br>
+			{% endif %}<br>
 		{% endfor %}
-
-	<input type="submit" value="modify" name="btn_modify">
+		<style>
+			input[type="file"] {
+				display: inline;
+			}
+		</style>
+		<div class="div_btn_modify">
+		<input type="submit" value="modify" name="btn_modify" class="btn btn-primary">
+		</div>
 	</form>
+	</div>
 	<script>
 		var btnCheckNickname = document.getElementById("btn_check_nickname");
 		var xhttp = new XMLHttpRequest();
@@ -42,5 +49,5 @@
 			document.getElementsByName("btn_modify")[0].setAttribute('disabled',"");
 		}
 	</script>
-</body>
-</html>
+</div>
+{% endblock %}

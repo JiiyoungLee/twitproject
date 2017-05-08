@@ -1,80 +1,69 @@
-<!DOCTYPE html>
-<html>
-<head>
-<style>
-	.hashtag_field {
-		border: none;
-		width: 100%;
-	}
-</style>
-</head>
-<body>
-	<h1>Article Page</h1>
+{% extends 'minitwitter/base.html' %}
+{% block content %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'css/minitwitter.css' %}">
+<h1>Article Page</h1>
+	<div class="div_article">
 	<form method="POST" action="{{request.path}}" enctype="multipart/form-data">
 	{% csrf_token %}
-		{{ form1.as_p }}
+		{{ form1.label_tag }} {{ form1 }}
+		<input type="text" name="hashtag_field" class="hashtag_field" readonly>
 		<script>
-		var value = "";
-		{% if form1.objects.tagged_set.all %} 
-			{% for tagged in form1.objects.tagged_set.all %}
-				value += "{{ tagged.hashtag.hashtag }}" 
-			{% endfor %}
-		{% endif %}
-		</script>
-		<input type="text" name="hashtag_field" class="hashtag_field" 
-		 readonly></div>
-		 <script>
-		var value = "";
-		{% if article.tagged_set.all %} 
-			{% for tagged in article.tagged_set.all %}
-				value += "{{ tagged.hashtag.hashtag }}  " 
-			{% endfor %}
-		{% endif %}
-		document.getElementsByName("hashtag_field")[0].value = value;
-		</script>
-		 <br>
-		{{ form3.label_tag }} {{ form3 }}
+			var value = "";
+			{% if article.hashtag.all %} 
+				{% for hashtag in article.hashtag.all %}
+					value += "{{ hashtag.hashtag }}  " 
+				{% endfor %}
+			{% endif %}
+			document.getElementsByName("hashtag_field")[0].value = value;
+		</script><br>
+		{{ form3.label_tag }} {{ form3 }}<br>
 		{% if form2 %}
-			{{ form2.as_p }}
+			{{ form2.label_tag }} {{form2 }}<br>
 		{% endif %}
 		{% if article.photo_set.all %}
 			{% for photo in article.photo_set.all %}
-				<img src="/minitwitter/uploads/{{ photo.photo }}" width="150px" height="100px" id="img{{ photo.id }}">
+				<img src="/minitwitter/uploads/{{ photo.photo }}" width="150px" height="auto" id="img{{ photo.id }}">
 				<input type="button" name="btn_delete_img" value="x" id="btn_delete_img{{ photo.id }}">
-				<br>
 			{% endfor %}
 		{% endif %}
 	<p>
-	<input type="submit" value="write">
+	<div class="div_btn_write">
+	<input type="submit" value="write" class="btn btn-primary">
+	</div>
 	</p>
 	</form>
+	</div>
+	<style>
+		input[type="file"] {
+			display: inline;
+		}
+	</style>
 	<script>
-	var btnDeleteImage = document.getElementsByName("btn_delete_img");
-	var xhttp = new XMLHttpRequest();
-	xhttp.onreadystatechange = function() {
-		if (this.readyState == 4 && this.status == 200) {
-			alert("Success to Delete Image.");
+		var btnDeleteImage = document.getElementsByName("btn_delete_img");
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				alert("Success to Delete Image.");
+				}
+		};
+		for (let i = 0; i < btnDeleteImage.length; i++) {
+			btnDeleteImage[i].addEventListener('click', function() {
+				var btnId = this.id.substr(14);
+				var deleteImage = document.getElementById("img"+btnId);
+				deleteImage.setAttribute("hidden", "");
+				this.setAttribute("hidden", "");
+				xhttp.open("GET", "/minitwitter/delete/image/"+	btnId, true);
+				xhttp.send();
+			});
 		}
-	};
-	for (let i = 0; i < btnDeleteImage.length; i++) {
-		btnDeleteImage[i].addEventListener('click', function() {
-			var btnId = btnDeleteImage[i].id.substr(14);
-			var deleteImage = document.getElementById("img"+btnId);
-			deleteImage.setAttribute("hidden", "");
-			btnDeleteImage[i].setAttribute("hidden", "");
-			xhttp.open("GET", "/minitwitter/delete/image/"+btnId, true);
-			xhttp.send();
+		var inputHashtag = document.getElementById("id_form3_prefix-hashtag");
+		var divHashtagField = document.getElementsByName("hashtag_field")[0];
+		inputHashtag.addEventListener('keyup', (event) => {
+			if (event.keyCode=='32') {
+				divHashtagField.value += "#"+inputHashtag.value+" ";
+				inputHashtag.value = ""
+			}
 		});
-	}
-
-	var inputHashtag = document.getElementById("id_form3_prefix-hashtag");
-	var divHashtagField = document.getElementsByName("hashtag_field")[0];
-	inputHashtag.addEventListener('keyup', (event) => {
-		if (event.keyCode=='32') {
-			divHashtagField.value += "#"+inputHashtag.value+" ";
-			inputHashtag.value = ""
-		}
-	});
-</script>
-</body>
-</html>
+	</script>
+{% endblock content%}

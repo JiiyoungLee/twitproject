@@ -1,22 +1,33 @@
-<!DOCTYPE html>
-<html>
-<head>
-</head>
-<body>
-	<h1>Login Page</h1>
+{% extends 'minitwitter/base.html' %}
+{% block content %}
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'css/minitwitter.css' %}">
+<div class="container">
+<h1>Login Page</h1>
 	{%if form.errors %}
 	<script>
 		alert("fail to login!");
 	</script>
 	{% endif %}
+	<div class="div_login">
 	<form method="POST" action=".">
 	{% csrf_token %}
-	<p><label for="id_username">ID  </label>{{ form.username }}</p>
-	<p><label for="id_password">PW  </label>{{ form.password }}</p>
-	<input type="submit" value="LOG IN">
+		<p><label for="id_username">ID  </label>{{ form.username }}</p>
+		<p><label for="id_password">PW  </label>{{ form.password }}</p>
+		<div class="div_btn_login">
+		<input type="submit" class="btn btn-success" value="LOG IN">
+		</div>
 	</form>
+	</div>
+	<div class="div_buttons_2">
+	<div class="div_first_form">
 	<form method="GET" action="{%url 'minitwitter:signin'%}">
-		<input type="submit" value="SIGN IN">
+		<input type="submit" value="SIGN IN" class="btn btn-info">
 	</form>
-</body>
-</html>
+	</div>
+	<form method="GET" action="{%url 'minitwitter:public_timeline'%}">
+		<input type="submit" value="Without Login" class="btn btn-warning">
+	</form>
+	</div>
+</div>
+{% endblock content %}

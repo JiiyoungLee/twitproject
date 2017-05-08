@@ -1,0 +1,87 @@
+	h1 {
+		text-align: center;
+	}
+
+	.div_first_form {
+		float: left;
+	}
+	.article {
+		border: 1px solid ;
+		margin: 5px;
+		padding: 5px;
+	}
+	.page {
+		position: absolute;
+		margin-left: 35%;
+	}
+
+	.link_page {
+		text-decoration: none;
+		border-radius: 2px;
+		background-color: #ffe6e6;
+	}
+	.link_page:link, .link_page:visited {
+		color: #330000;
+	}
+	.div_nickname {
+		float: left;
+	}
+	.div_date {
+		text-align: right;
+		float: left;
+		margin-left: 50%;
+	}
+	.div_buttons input[type="submit"] {
+		margin: 10px;
+	}
+	.div_buttons_2, .div_login {
+		margin-left: 35%;
+	}
+	.div_user {
+		text-align: center;
+	}
+	.div_buttons {
+		margin-left: 20%;
+	}
+	.div_modify {
+		margin-left: 30%;
+	}
+	.div_btn_modify {
+		margin-left: 20%;
+	}
+	.div_btn_modify_article input[type="submit"] {
+		margin-left: 5%;
+	}
+	.div_login {
+		margin-top: 15px;
+		margin-bottom: 15px;
+	}
+	.div_btn_login {
+		margin-left: 15%;
+	}
+	.hashtag_field {
+		border: none;
+		width: 100%;
+	}
+	textarea {
+		vertical-align: middle;
+	}
+	.div_article {
+		margin-left: 20%;
+	}
+	.div_btn_write {
+		margin-left: 30%;
+	}
+	.div_signin {
+		margin-left: 30%;
+	}
+	.div_btn_signin {
+		margin-left: 20%;
+	}
+	.div_comment, .div_btn_comment {
+		margin-left: 10%;
+		margin-top: 18px;
+	}
+	.comment_date {
+		margin-left: 5%;
+	}
